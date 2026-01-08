@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "name": "Manhã",
+    "startTime": "09:00",
+    "endTime": "12:00",
+    "capacity": 5,
+    "booked": 2
+  },
+  {
+    "id": "2",
+    "name": "Tarde",
+    "startTime": "13:00",
+    "endTime": "17:00",
+    "capacity": 8,
+    "booked": 5
+  },
+  {
+    "id": "3",
+    "name": "Noite",
+    "startTime": "18:00",
+    "endTime": "22:00",
+    "capacity": 3,
+    "booked": 1
+  },
+  {
+    "id": "4",
+    "name": "Almoço",
+    "startTime": "12:00",
+    "endTime": "13:00",
+    "capacity": 10,
+    "booked": 10
+  },
+  {
+    "id": "5",
+    "name": "Happy Hour",
+    "startTime": "17:00",
+    "endTime": "18:00",
+    "capacity": 7,
+    "booked": 3
+  }
+]
