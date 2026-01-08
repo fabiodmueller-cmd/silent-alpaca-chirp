@@ -10,7 +10,7 @@ import { useSlotMachines } from "@/context/SlotMachineContext";
 import { showSuccess, showError } from "@/utils/toast";
 
 const ImportBackup = () => {
-  const { setSlotMachines } = useSlotMachines();
+  const { slotMachines, setSlotMachines } = useSlotMachines(); // Get current slotMachines
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,7 +43,7 @@ const ImportBackup = () => {
 
           if (rawMachinesToImport) {
             const formattedMachines = rawMachinesToImport.map((machine: any) => ({
-              id: (machine.id || `temp-${machine.serial_number || Math.random().toString(36).substring(7)}`).toString(), // Ensure unique ID, fallback if none
+              id: (machine.id || machine.serial_number || `temp-${Math.random().toString(36).substring(7)}`).toString(), // Ensure unique ID, fallback if none
               serialNumber: (machine.serial_number || "N/A").toString(), // Map serial_number
               model: (machine.label || machine.model || "UNKNOWN_MODEL").toString(),
               location: (machine.location || "N/A").toString(),
@@ -55,7 +55,7 @@ const ImportBackup = () => {
             // Now, validate the formattedMachines against the expected interface
             const invalidItem = formattedMachines.find((item: any) => !(
               typeof item.id === 'string' &&
-              typeof item.serialNumber === 'string' && // Validate new serialNumber
+              typeof item.serialNumber === 'string' &&
               typeof item.model === 'string' &&
               typeof item.location === 'string' &&
               (item.status === 'operational' || item.status === 'maintenance' || item.status === 'offline') &&
@@ -78,8 +78,18 @@ const ImportBackup = () => {
               console.error("Dados importados não correspondem ao formato esperado:", parsedData);
               showError(`Formato de arquivo JSON inválido: ${errorMessage}`);
             } else {
-              setSlotMachines(formattedMachines);
-              showSuccess("Backup importado com sucesso!");
+              // Prevent duplicates: Filter out machines that already exist by ID
+              const existingMachineIds = new Set(slotMachines.map(m => m.id));
+              const newUniqueMachines = formattedMachines.filter(
+                (machine) => !existingMachineIds.has(machine.id)
+              );
+
+              if (newUniqueMachines.length > 0) {
+                setSlotMachines([...slotMachines, ...newUniqueMachines]);
+                showSuccess(`${newUniqueMachines.length} máquinas importadas com sucesso!`);
+              } else {
+                showSuccess("Nenhuma nova máquina para importar ou todas já existem.");
+              }
             }
           } else {
             console.error("Dados importados não correspondem ao formato esperado:", parsedData);
