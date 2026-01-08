@@ -22,16 +22,6 @@ const ImportBackup = () => {
           const content = e.target?.result as string;
           const parsedData = JSON.parse(content);
 
-          // --- Adicionando log detalhado para depuração ---
-          console.log("Conteúdo JSON analisado (parsedData):", parsedData);
-          console.log("Tipo de parsedData:", typeof parsedData);
-          console.log("É um array?", Array.isArray(parsedData));
-          if (typeof parsedData === 'object' && parsedData !== null) {
-            console.log("parsedData.slotMachines:", parsedData.slotMachines);
-            console.log("É parsedData.slotMachines um array?", Array.isArray(parsedData.slotMachines));
-          }
-          // -------------------------------------------------
-
           let machinesToImport: any[] | null = null;
           let errorMessage = "";
 
@@ -42,8 +32,11 @@ const ImportBackup = () => {
             if (Array.isArray(parsedData.slotMachines)) {
               // Case 2: The JSON is an object with a 'slotMachines' property that is an array
               machinesToImport = parsedData.slotMachines;
+            } else if (Array.isArray(parsedData.machines)) { // NEW: Check for 'machines' property
+              // Case 3: The JSON is an object with a 'machines' property that is an array
+              machinesToImport = parsedData.machines;
             } else {
-              errorMessage = "O objeto JSON é válido, mas não contém uma propriedade 'slotMachines' que seja um array.";
+              errorMessage = "O objeto JSON é válido, mas não contém uma propriedade 'slotMachines' ou 'machines' que seja um array.";
             }
           } else {
             errorMessage = "O arquivo JSON não é um array direto nem um objeto válido.";
