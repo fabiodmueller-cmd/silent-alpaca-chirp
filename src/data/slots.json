@@ -1,42 +1,42 @@
 [
   {
-    "id": "1",
-    "name": "Manhã",
-    "startTime": "09:00",
-    "endTime": "12:00",
-    "capacity": 5,
-    "booked": 2
+    "id": "SM001",
+    "model": "Lucky 7s Deluxe",
+    "location": "Casino Floor - Section A",
+    "status": "operational",
+    "lastMaintenance": "2023-10-26",
+    "dailyRevenue": 1250.75
   },
   {
-    "id": "2",
-    "name": "Tarde",
-    "startTime": "13:00",
-    "endTime": "17:00",
-    "capacity": 8,
-    "booked": 5
+    "id": "SM002",
+    "model": "Pharaoh's Fortune",
+    "location": "High Roller Lounge",
+    "status": "maintenance",
+    "lastMaintenance": "2024-07-15",
+    "dailyRevenue": 0
   },
   {
-    "id": "3",
-    "name": "Noite",
-    "startTime": "18:00",
-    "endTime": "22:00",
-    "capacity": 3,
-    "booked": 1
+    "id": "SM003",
+    "model": "Space Invaders Retro",
+    "location": "Arcade Zone",
+    "status": "operational",
+    "lastMaintenance": "2024-08-01",
+    "dailyRevenue": 890.50
   },
   {
-    "id": "4",
-    "name": "Almoço",
-    "startTime": "12:00",
-    "endTime": "13:00",
-    "capacity": 10,
-    "booked": 10
+    "id": "SM004",
+    "model": "Diamond Rush",
+    "location": "Casino Floor - Section B",
+    "status": "offline",
+    "lastMaintenance": "2024-07-01",
+    "dailyRevenue": 0
   },
   {
-    "id": "5",
-    "name": "Happy Hour",
-    "startTime": "17:00",
-    "endTime": "18:00",
-    "capacity": 7,
-    "booked": 3
+    "id": "SM005",
+    "model": "Wild West Gold",
+    "location": "Smoking Area",
+    "status": "operational",
+    "lastMaintenance": "2024-08-10",
+    "dailyRevenue": 1500.00
   }
 ]

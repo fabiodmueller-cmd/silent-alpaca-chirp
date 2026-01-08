@@ -11,7 +11,7 @@ const Index = () => {
           Comece a construir seu projeto incrível aqui!
         </p>
         <Button asChild size="lg">
-          <Link to="/slot-manager">Ir para Gerenciador de Slots</Link>
+          <Link to="/slot-machine-manager">Ir para Gerenciador de Máquinas Caça-Níqueis</Link>
         </Button>
       </div>
       <MadeWithDyad />
