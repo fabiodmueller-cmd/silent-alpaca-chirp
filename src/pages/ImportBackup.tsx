@@ -22,29 +22,43 @@ const ImportBackup = () => {
           const content = e.target?.result as string;
           const parsedData = JSON.parse(content);
 
-          // Check if parsedData is an object and contains a 'slotMachines' array
-          if (
-            typeof parsedData === 'object' &&
-            parsedData !== null &&
-            Array.isArray(parsedData.slotMachines) &&
-            parsedData.slotMachines.every((item: any) => 
-              typeof item.id === 'string' && 
-              typeof item.model === 'string' && 
+          let errorMessage = "";
+
+          if (!(typeof parsedData === 'object' && parsedData !== null)) {
+            errorMessage = "O arquivo JSON não é um objeto válido.";
+          } else if (!Array.isArray(parsedData.slotMachines)) {
+            errorMessage = "O objeto JSON não contém uma propriedade 'slotMachines' que seja um array.";
+          } else {
+            const invalidItem = parsedData.slotMachines.find((item: any) => !(
+              typeof item.id === 'string' &&
+              typeof item.model === 'string' &&
               typeof item.location === 'string' &&
               (item.status === 'operational' || item.status === 'maintenance' || item.status === 'offline') &&
               typeof item.lastMaintenance === 'string' &&
               typeof item.dailyRevenue === 'number'
-            )
-          ) {
-            setSlotMachines(parsedData.slotMachines); // Use the array inside 'slotMachines' property
-            showSuccess("Backup importado com sucesso!");
-          } else {
+            ));
+
+            if (invalidItem) {
+              errorMessage = `Um ou mais itens no array 'slotMachines' não seguem o formato esperado. Item problemático: ${JSON.stringify(invalidItem)}.`;
+              if (typeof invalidItem.id !== 'string') errorMessage += " 'id' não é string.";
+              if (typeof invalidItem.model !== 'string') errorMessage += " 'model' não é string.";
+              if (typeof invalidItem.location !== 'string') errorMessage += " 'location' não é string.";
+              if (!['operational', 'maintenance', 'offline'].includes(invalidItem.status)) errorMessage += " 'status' inválido.";
+              if (typeof invalidItem.lastMaintenance !== 'string') errorMessage += " 'lastMaintenance' não é string.";
+              if (typeof invalidItem.dailyRevenue !== 'number') errorMessage += " 'dailyRevenue' não é number.";
+            }
+          }
+
+          if (errorMessage) {
             console.error("Dados importados não correspondem ao formato esperado:", parsedData);
-            showError("Formato de arquivo JSON inválido. O arquivo deve ser um objeto com uma propriedade 'slotMachines' que contém um array de objetos de máquinas caça-níqueis com 'id', 'model', 'location', 'status', 'lastMaintenance' e 'dailyRevenue'.");
+            showError(`Formato de arquivo JSON inválido: ${errorMessage}`);
+          } else {
+            setSlotMachines(parsedData.slotMachines);
+            showSuccess("Backup importado com sucesso!");
           }
         } catch (error) {
           console.error("Erro ao analisar JSON:", error);
-          showError("Erro ao ler o arquivo JSON. Verifique o formato.");
+          showError("Erro ao ler o arquivo JSON. Verifique se é um JSON válido.");
         }
       };
       reader.readAsText(file);
