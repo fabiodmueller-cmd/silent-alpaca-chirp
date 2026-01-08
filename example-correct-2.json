@@ -1,0 +1,20 @@
+{
+  "slotMachines": [
+    {
+      "id": "SM001",
+      "model": "Lucky 7s Deluxe",
+      "location": "Casino Floor - Section A",
+      "status": "operational",
+      "lastMaintenance": "2023-10-26",
+      "dailyRevenue": 1250.75
+    },
+    {
+      "id": "SM002",
+      "model": "Pharaoh's Fortune",
+      "location": "High Roller Lounge",
+      "status": "maintenance",
+      "lastMaintenance": "2024-07-15",
+      "dailyRevenue": 0
+    }
+  ]
+}
