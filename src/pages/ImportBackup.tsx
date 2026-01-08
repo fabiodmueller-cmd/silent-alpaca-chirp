@@ -1,0 +1,95 @@
+"use client";
+
+import React, { useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Upload } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useSlotMachines } from "@/context/SlotMachineContext";
+import { showSuccess, showError } from "@/utils/toast";
+
+const ImportBackup = () => {
+  const { setSlotMachines } = useSlotMachines();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const parsedData = JSON.parse(content);
+
+          // Basic validation to ensure it looks like our slot machine data
+          if (Array.isArray(parsedData) && parsedData.every(item => 
+            typeof item.id === 'string' && 
+            typeof item.model === 'string' && 
+            typeof item.location === 'string' &&
+            (item.status === 'operational' || item.status === 'maintenance' || item.status === 'offline') &&
+            typeof item.lastMaintenance === 'string' &&
+            typeof item.dailyRevenue === 'number'
+          )) {
+            setSlotMachines(parsedData);
+            showSuccess("Backup importado com sucesso!");
+          } else {
+            showError("Formato de arquivo JSON inválido para máquinas caça-níqueis.");
+          }
+        } catch (error) {
+          console.error("Erro ao analisar JSON:", error);
+          showError("Erro ao ler o arquivo JSON. Verifique o formato.");
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  return (
+    <div className="container mx-auto p-4 md:p-8">
+      <div className="flex items-center justify-between mb-6">
+        <Button variant="outline" asChild>
+          <Link to="/">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+          </Link>
+        </Button>
+        <h1 className="text-3xl font-bold text-center flex-grow">Importar Backup de Máquinas</h1>
+        <div className="w-24"></div> {/* Placeholder for alignment */}
+      </div>
+
+      <Card className="bg-dashboard-secondary-blue text-white">
+        <CardHeader>
+          <CardTitle>Carregar Arquivo JSON</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4 text-gray-300">
+            Selecione um arquivo JSON contendo os dados das suas máquinas caça-níqueis para importar.
+          </p>
+          <div className="flex items-center space-x-2">
+            <Input
+              type="file"
+              accept=".json"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+              className="hidden" // Hide the default file input
+            />
+            <Button onClick={handleUploadClick} className="bg-dashboard-accent-orange hover:bg-orange-600 text-white">
+              <Upload className="mr-2 h-4 w-4" /> Selecionar Arquivo
+            </Button>
+            {fileInputRef.current?.files?.[0] && (
+              <span className="text-sm text-gray-300">
+                {fileInputRef.current.files[0].name}
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ImportBackup;

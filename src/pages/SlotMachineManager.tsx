@@ -10,11 +10,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import slotsData from "@/data/slots.json";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useSlotMachines } from "@/context/SlotMachineContext"; // Import the context hook
 
 interface SlotMachine {
   id: string;
@@ -26,7 +26,7 @@ interface SlotMachine {
 }
 
 const SlotMachineManager = () => {
-  const slotMachines: SlotMachine[] = slotsData;
+  const { slotMachines } = useSlotMachines(); // Use the slot machines from context
 
   const getStatusBadgeVariant = (status: SlotMachine["status"]) => {
     switch (status) {
@@ -53,7 +53,7 @@ const SlotMachineManager = () => {
         <div className="w-24"></div> {/* Placeholder for alignment */}
       </div>
 
-      <Card>
+      <Card className="bg-dashboard-secondary-blue text-white">
         <CardHeader>
           <CardTitle>Máquinas Caça-Níqueis</CardTitle>
         </CardHeader>

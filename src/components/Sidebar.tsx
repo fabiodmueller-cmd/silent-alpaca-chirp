@@ -15,6 +15,7 @@ import {
   User,
   Settings,
   Menu,
+  UploadCloud, // New icon for import
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,6 +58,7 @@ const SidebarContent = () => {
     { to: "/machine-balance", icon: DollarSign, label: "SOBRA MÁQUINAS" },
     { to: "/advanced-reports", icon: Settings, label: "REL. AVANÇADOS" },
     { to: "/general-report", icon: FileText, label: "REL. GERAL" },
+    { to: "/import-backup", icon: UploadCloud, label: "IMPORTAR BACKUP" }, // New nav item
   ];
 
   return (
