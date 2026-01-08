@@ -22,22 +22,22 @@ const ImportBackup = () => {
           const content = e.target?.result as string;
           const parsedData = JSON.parse(content);
 
-          let machinesToImport: any[] | null = null;
+          let rawMachinesToImport: any[] | null = null;
           let errorMessage = "";
 
           if (Array.isArray(parsedData)) {
             // Case 1: The JSON is directly an array of slot machines
-            machinesToImport = parsedData;
+            rawMachinesToImport = parsedData;
           } else if (typeof parsedData === 'object' && parsedData !== null) {
             if (Array.isArray(parsedData.slotMachines)) {
               // Case 2: The JSON is an object with a 'slotMachines' property that is an array
-              machinesToImport = parsedData.slotMachines;
-            } else if (parsedData.data && Array.isArray(parsedData.data.machines)) { // NEW: Check for 'data.machines' property
+              rawMachinesToImport = parsedData.slotMachines;
+            } else if (parsedData.data && Array.isArray(parsedData.data.machines)) {
               // Case 3: The JSON is an object with a 'data' property, and inside 'data', a 'machines' property that is an array
-              machinesToImport = parsedData.data.machines;
-            } else if (Array.isArray(parsedData.machines)) { // Existing check for 'machines' property at root
+              rawMachinesToImport = parsedData.data.machines;
+            } else if (Array.isArray(parsedData.machines)) {
               // Case 4: The JSON is an object with a 'machines' property at the root that is an array
-              machinesToImport = parsedData.machines;
+              rawMachinesToImport = parsedData.machines;
             } else {
               errorMessage = "O objeto JSON é válido, mas não contém uma propriedade 'slotMachines', 'machines' ou 'data.machines' que seja um array.";
             }
@@ -45,9 +45,19 @@ const ImportBackup = () => {
             errorMessage = "O arquivo JSON não é um array direto nem um objeto válido.";
           }
 
-          if (machinesToImport) {
-            // Validate the structure of each machine object
-            const invalidItem = machinesToImport.find((item: any) => !(
+          if (rawMachinesToImport) {
+            // Map the imported machine data to match the SlotMachine interface
+            const formattedMachines = rawMachinesToImport.map((machine: any) => ({
+              id: (machine.id || machine.serial_number || "UNKNOWN_ID").toString(), // Ensure ID is always a string
+              model: (machine.label || machine.model || "UNKNOWN_MODEL").toString(), // Ensure model is always a string
+              location: (machine.location || "N/A").toString(),
+              status: "operational", // Default status as it's not in the backup
+              lastMaintenance: machine.updated_date ? new Date(machine.updated_date).toISOString().split('T')[0] : "N/A", // Use 'updated_date' or default
+              dailyRevenue: 0 // Default revenue as it's not in the backup
+            }));
+
+            // Now, validate the formattedMachines against the expected interface
+            const invalidItem = formattedMachines.find((item: any) => !(
               typeof item.id === 'string' &&
               typeof item.model === 'string' &&
               typeof item.location === 'string' &&
@@ -57,8 +67,7 @@ const ImportBackup = () => {
             ));
 
             if (invalidItem) {
-              errorMessage = `Um ou mais itens no array de máquinas não seguem o formato esperado. Item problemático: ${JSON.stringify(invalidItem)}.`;
-              // Detailed error messages for debugging
+              errorMessage = `Um ou mais itens no array de máquinas formatadas não seguem o formato esperado. Item problemático: ${JSON.stringify(invalidItem)}.`;
               if (typeof invalidItem.id !== 'string') errorMessage += " 'id' não é string.";
               if (typeof invalidItem.model !== 'string') errorMessage += " 'model' não é string.";
               if (typeof invalidItem.location !== 'string') errorMessage += " 'location' não é string.";
@@ -66,23 +75,18 @@ const ImportBackup = () => {
               if (typeof invalidItem.lastMaintenance !== 'string') errorMessage += " 'lastMaintenance' não é string.";
               if (typeof invalidItem.dailyRevenue !== 'number') errorMessage += " 'dailyRevenue' não é number.";
             }
-          }
 
-          if (errorMessage) {
+            if (errorMessage) {
+              console.error("Dados importados não correspondem ao formato esperado:", parsedData);
+              showError(`Formato de arquivo JSON inválido: ${errorMessage}`);
+            } else {
+              setSlotMachines(formattedMachines);
+              showSuccess("Backup importado com sucesso!");
+            }
+          } else {
+            // This else block handles the case where rawMachinesToImport was not found at all
             console.error("Dados importados não correspondem ao formato esperado:", parsedData);
             showError(`Formato de arquivo JSON inválido: ${errorMessage}`);
-          } else if (machinesToImport) {
-            // Map the imported machine data to match the SlotMachine interface if necessary
-            const formattedMachines = machinesToImport.map((machine: any) => ({
-              id: machine.id || machine.serial_number, // Use 'id' or 'serial_number'
-              model: machine.label || machine.model, // Use 'label' or 'model'
-              location: machine.location || "N/A", // Use 'location' or default
-              status: "operational", // Default status as it's not in the backup
-              lastMaintenance: machine.updated_date ? new Date(machine.updated_date).toISOString().split('T')[0] : "N/A", // Use 'updated_date' or default
-              dailyRevenue: 0 // Default revenue as it's not in the backup
-            }));
-            setSlotMachines(formattedMachines);
-            showSuccess("Backup importado com sucesso!");
           }
         } catch (error) {
           console.error("Erro ao analisar JSON:", error);
