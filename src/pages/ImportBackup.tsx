@@ -22,20 +22,25 @@ const ImportBackup = () => {
           const content = e.target?.result as string;
           const parsedData = JSON.parse(content);
 
-          // Basic validation to ensure it looks like our slot machine data
-          if (Array.isArray(parsedData) && parsedData.every(item => 
-            typeof item.id === 'string' && 
-            typeof item.model === 'string' && 
-            typeof item.location === 'string' &&
-            (item.status === 'operational' || item.status === 'maintenance' || item.status === 'offline') &&
-            typeof item.lastMaintenance === 'string' &&
-            typeof item.dailyRevenue === 'number'
-          )) {
-            setSlotMachines(parsedData);
+          // Check if parsedData is an object and contains a 'slotMachines' array
+          if (
+            typeof parsedData === 'object' &&
+            parsedData !== null &&
+            Array.isArray(parsedData.slotMachines) &&
+            parsedData.slotMachines.every((item: any) => 
+              typeof item.id === 'string' && 
+              typeof item.model === 'string' && 
+              typeof item.location === 'string' &&
+              (item.status === 'operational' || item.status === 'maintenance' || item.status === 'offline') &&
+              typeof item.lastMaintenance === 'string' &&
+              typeof item.dailyRevenue === 'number'
+            )
+          ) {
+            setSlotMachines(parsedData.slotMachines); // Use the array inside 'slotMachines' property
             showSuccess("Backup importado com sucesso!");
           } else {
             console.error("Dados importados não correspondem ao formato esperado:", parsedData);
-            showError("Formato de arquivo JSON inválido. Verifique se é um array de objetos com 'id', 'model', 'location', 'status' (operational, maintenance, offline), 'lastMaintenance' e 'dailyRevenue' com os tipos corretos.");
+            showError("Formato de arquivo JSON inválido. O arquivo deve ser um objeto com uma propriedade 'slotMachines' que contém um array de objetos de máquinas caça-níqueis com 'id', 'model', 'location', 'status', 'lastMaintenance' e 'dailyRevenue'.");
           }
         } catch (error) {
           console.error("Erro ao analisar JSON:", error);
