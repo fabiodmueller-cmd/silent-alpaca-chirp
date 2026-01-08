@@ -32,17 +32,21 @@ const ImportBackup = () => {
             if (Array.isArray(parsedData.slotMachines)) {
               // Case 2: The JSON is an object with a 'slotMachines' property that is an array
               machinesToImport = parsedData.slotMachines;
-            } else if (Array.isArray(parsedData.machines)) { // NEW: Check for 'machines' property
-              // Case 3: The JSON is an object with a 'machines' property that is an array
+            } else if (parsedData.data && Array.isArray(parsedData.data.machines)) { // NEW: Check for 'data.machines' property
+              // Case 3: The JSON is an object with a 'data' property, and inside 'data', a 'machines' property that is an array
+              machinesToImport = parsedData.data.machines;
+            } else if (Array.isArray(parsedData.machines)) { // Existing check for 'machines' property at root
+              // Case 4: The JSON is an object with a 'machines' property at the root that is an array
               machinesToImport = parsedData.machines;
             } else {
-              errorMessage = "O objeto JSON é válido, mas não contém uma propriedade 'slotMachines' ou 'machines' que seja um array.";
+              errorMessage = "O objeto JSON é válido, mas não contém uma propriedade 'slotMachines', 'machines' ou 'data.machines' que seja um array.";
             }
           } else {
             errorMessage = "O arquivo JSON não é um array direto nem um objeto válido.";
           }
 
           if (machinesToImport) {
+            // Validate the structure of each machine object
             const invalidItem = machinesToImport.find((item: any) => !(
               typeof item.id === 'string' &&
               typeof item.model === 'string' &&
@@ -54,6 +58,7 @@ const ImportBackup = () => {
 
             if (invalidItem) {
               errorMessage = `Um ou mais itens no array de máquinas não seguem o formato esperado. Item problemático: ${JSON.stringify(invalidItem)}.`;
+              // Detailed error messages for debugging
               if (typeof invalidItem.id !== 'string') errorMessage += " 'id' não é string.";
               if (typeof invalidItem.model !== 'string') errorMessage += " 'model' não é string.";
               if (typeof invalidItem.location !== 'string') errorMessage += " 'location' não é string.";
@@ -67,7 +72,16 @@ const ImportBackup = () => {
             console.error("Dados importados não correspondem ao formato esperado:", parsedData);
             showError(`Formato de arquivo JSON inválido: ${errorMessage}`);
           } else if (machinesToImport) {
-            setSlotMachines(machinesToImport);
+            // Map the imported machine data to match the SlotMachine interface if necessary
+            const formattedMachines = machinesToImport.map((machine: any) => ({
+              id: machine.id || machine.serial_number, // Use 'id' or 'serial_number'
+              model: machine.label || machine.model, // Use 'label' or 'model'
+              location: machine.location || "N/A", // Use 'location' or default
+              status: "operational", // Default status as it's not in the backup
+              lastMaintenance: machine.updated_date ? new Date(machine.updated_date).toISOString().split('T')[0] : "N/A", // Use 'updated_date' or default
+              dailyRevenue: 0 // Default revenue as it's not in the backup
+            }));
+            setSlotMachines(formattedMachines);
             showSuccess("Backup importado com sucesso!");
           }
         } catch (error) {
