@@ -62,6 +62,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Custom colors for the dashboard design
+        'dashboard-primary-blue': '#000080', // Deep blue for background/sidebar
+        'dashboard-secondary-blue': '#0000CD', // Medium blue for cards
+        'dashboard-accent-orange': '#FFA500', // Orange for accents
+        'dashboard-accent-green': '#008000', // Green for positive metrics
       },
       borderRadius: {
         lg: "var(--radius)",
