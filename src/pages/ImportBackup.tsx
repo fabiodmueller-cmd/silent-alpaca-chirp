@@ -26,17 +26,13 @@ const ImportBackup = () => {
           let errorMessage = "";
 
           if (Array.isArray(parsedData)) {
-            // Case 1: The JSON is directly an array of slot machines
             rawMachinesToImport = parsedData;
           } else if (typeof parsedData === 'object' && parsedData !== null) {
             if (Array.isArray(parsedData.slotMachines)) {
-              // Case 2: The JSON is an object with a 'slotMachines' property that is an array
               rawMachinesToImport = parsedData.slotMachines;
             } else if (parsedData.data && Array.isArray(parsedData.data.machines)) {
-              // Case 3: The JSON is an object with a 'data' property, and inside 'data', a 'machines' property that is an array
               rawMachinesToImport = parsedData.data.machines;
             } else if (Array.isArray(parsedData.machines)) {
-              // Case 4: The JSON is an object with a 'machines' property at the root that is an array
               rawMachinesToImport = parsedData.machines;
             } else {
               errorMessage = "O objeto JSON é válido, mas não contém uma propriedade 'slotMachines', 'machines' ou 'data.machines' que seja um array.";
@@ -46,19 +42,20 @@ const ImportBackup = () => {
           }
 
           if (rawMachinesToImport) {
-            // Map the imported machine data to match the SlotMachine interface
             const formattedMachines = rawMachinesToImport.map((machine: any) => ({
-              id: (machine.id || machine.serial_number || "UNKNOWN_ID").toString(), // Ensure ID is always a string
-              model: (machine.label || machine.model || "UNKNOWN_MODEL").toString(), // Ensure model is always a string
+              id: (machine.id || `temp-${machine.serial_number || Math.random().toString(36).substring(7)}`).toString(), // Ensure unique ID, fallback if none
+              serialNumber: (machine.serial_number || "N/A").toString(), // Map serial_number
+              model: (machine.label || machine.model || "UNKNOWN_MODEL").toString(),
               location: (machine.location || "N/A").toString(),
-              status: "operational", // Default status as it's not in the backup
-              lastMaintenance: machine.updated_date ? new Date(machine.updated_date).toISOString().split('T')[0] : "N/A", // Use 'updated_date' or default
-              dailyRevenue: 0 // Default revenue as it's not in the backup
+              status: "operational", // Default status
+              lastMaintenance: machine.updated_date ? new Date(machine.updated_date).toISOString().split('T')[0] : "N/A",
+              dailyRevenue: 0 // Default revenue
             }));
 
             // Now, validate the formattedMachines against the expected interface
             const invalidItem = formattedMachines.find((item: any) => !(
               typeof item.id === 'string' &&
+              typeof item.serialNumber === 'string' && // Validate new serialNumber
               typeof item.model === 'string' &&
               typeof item.location === 'string' &&
               (item.status === 'operational' || item.status === 'maintenance' || item.status === 'offline') &&
@@ -69,6 +66,7 @@ const ImportBackup = () => {
             if (invalidItem) {
               errorMessage = `Um ou mais itens no array de máquinas formatadas não seguem o formato esperado. Item problemático: ${JSON.stringify(invalidItem)}.`;
               if (typeof invalidItem.id !== 'string') errorMessage += " 'id' não é string.";
+              if (typeof invalidItem.serialNumber !== 'string') errorMessage += " 'serialNumber' não é string.";
               if (typeof invalidItem.model !== 'string') errorMessage += " 'model' não é string.";
               if (typeof invalidItem.location !== 'string') errorMessage += " 'location' não é string.";
               if (!['operational', 'maintenance', 'offline'].includes(invalidItem.status)) errorMessage += " 'status' inválido.";
@@ -84,7 +82,6 @@ const ImportBackup = () => {
               showSuccess("Backup importado com sucesso!");
             }
           } else {
-            // This else block handles the case where rawMachinesToImport was not found at all
             console.error("Dados importados não correspondem ao formato esperado:", parsedData);
             showError(`Formato de arquivo JSON inválido: ${errorMessage}`);
           }
@@ -127,7 +124,7 @@ const ImportBackup = () => {
               accept=".json"
               onChange={handleFileChange}
               ref={fileInputRef}
-              className="hidden" // Hide the default file input
+              className="hidden"
             />
             <Button onClick={handleUploadClick} className="bg-dashboard-accent-orange hover:bg-orange-600 text-white">
               <Upload className="mr-2 h-4 w-4" /> Selecionar Arquivo

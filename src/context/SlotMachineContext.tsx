@@ -5,6 +5,7 @@ import initialSlotsData from "@/data/slots.json";
 
 interface SlotMachine {
   id: string;
+  serialNumber: string; // Added serialNumber property
   model: string;
   location: string;
   status: "operational" | "maintenance" | "offline";

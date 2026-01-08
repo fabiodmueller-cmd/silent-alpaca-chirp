@@ -16,19 +16,20 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useSlotMachines } from "@/context/SlotMachineContext"; // Import the context hook
 
-interface SlotMachine {
-  id: string;
-  model: string;
-  location: string;
-  status: "operational" | "maintenance" | "offline";
-  lastMaintenance: string;
-  dailyRevenue: number;
-}
+// The SlotMachine interface is now imported from the context
+// interface SlotMachine {
+//   id: string;
+//   model: string;
+//   location: string;
+//   status: "operational" | "maintenance" | "offline";
+//   lastMaintenance: string;
+//   dailyRevenue: number;
+// }
 
 const SlotMachineManager = () => {
   const { slotMachines } = useSlotMachines(); // Use the slot machines from context
 
-  const getStatusBadgeVariant = (status: SlotMachine["status"]) => {
+  const getStatusBadgeVariant = (status: string) => { // Changed type to string for flexibility
     switch (status) {
       case "operational":
         return "default";
@@ -61,7 +62,7 @@ const SlotMachineManager = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
+                <TableHead>NS</TableHead>{/* Changed from ID to NS */}
                 <TableHead>Modelo</TableHead>
                 <TableHead>Localização</TableHead>
                 <TableHead>Última Manutenção</TableHead>
@@ -72,11 +73,11 @@ const SlotMachineManager = () => {
             <TableBody>
               {slotMachines.map((machine) => (
                 <TableRow key={machine.id}>
-                  <TableCell className="font-medium">{machine.id}</TableCell>
+                  <TableCell className="font-medium">NS {machine.serialNumber}</TableCell>{/* Display NS + serialNumber */}
                   <TableCell>{machine.model}</TableCell>
                   <TableCell>{machine.location}</TableCell>
                   <TableCell>{machine.lastMaintenance}</TableCell>
-                  <TableCell>${machine.dailyRevenue.toFixed(2)}</TableCell>
+                  <TableCell>R$ {machine.dailyRevenue.toFixed(2)}</TableCell> {/* Formatted to R$ */}
                   <TableCell className="text-right">
                     <Badge variant={getStatusBadgeVariant(machine.status)}>
                       {machine.status === "operational" && "Operacional"}
