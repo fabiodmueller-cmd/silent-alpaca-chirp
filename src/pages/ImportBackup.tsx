@@ -22,14 +22,21 @@ const ImportBackup = () => {
           const content = e.target?.result as string;
           const parsedData = JSON.parse(content);
 
+          let machinesToImport: any[] | null = null;
           let errorMessage = "";
 
-          if (!(typeof parsedData === 'object' && parsedData !== null)) {
-            errorMessage = "O arquivo JSON não é um objeto válido.";
-          } else if (!Array.isArray(parsedData.slotMachines)) {
-            errorMessage = "O objeto JSON não contém uma propriedade 'slotMachines' que seja um array.";
+          if (Array.isArray(parsedData)) {
+            // Case 1: The JSON is directly an array of slot machines
+            machinesToImport = parsedData;
+          } else if (typeof parsedData === 'object' && parsedData !== null && Array.isArray(parsedData.slotMachines)) {
+            // Case 2: The JSON is an object with a 'slotMachines' property that is an array
+            machinesToImport = parsedData.slotMachines;
           } else {
-            const invalidItem = parsedData.slotMachines.find((item: any) => !(
+            errorMessage = "Formato de arquivo JSON inválido. O arquivo deve ser um array de máquinas ou um objeto com uma propriedade 'slotMachines' que seja um array.";
+          }
+
+          if (machinesToImport) {
+            const invalidItem = machinesToImport.find((item: any) => !(
               typeof item.id === 'string' &&
               typeof item.model === 'string' &&
               typeof item.location === 'string' &&
@@ -39,7 +46,7 @@ const ImportBackup = () => {
             ));
 
             if (invalidItem) {
-              errorMessage = `Um ou mais itens no array 'slotMachines' não seguem o formato esperado. Item problemático: ${JSON.stringify(invalidItem)}.`;
+              errorMessage = `Um ou mais itens no array de máquinas não seguem o formato esperado. Item problemático: ${JSON.stringify(invalidItem)}.`;
               if (typeof invalidItem.id !== 'string') errorMessage += " 'id' não é string.";
               if (typeof invalidItem.model !== 'string') errorMessage += " 'model' não é string.";
               if (typeof invalidItem.location !== 'string') errorMessage += " 'location' não é string.";
@@ -52,8 +59,8 @@ const ImportBackup = () => {
           if (errorMessage) {
             console.error("Dados importados não correspondem ao formato esperado:", parsedData);
             showError(`Formato de arquivo JSON inválido: ${errorMessage}`);
-          } else {
-            setSlotMachines(parsedData.slotMachines);
+          } else if (machinesToImport) {
+            setSlotMachines(machinesToImport);
             showSuccess("Backup importado com sucesso!");
           }
         } catch (error) {
