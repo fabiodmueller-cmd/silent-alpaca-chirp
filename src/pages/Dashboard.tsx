@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import DashboardHeader from "@/components/DashboardHeader";
 import MetricCard from "@/components/MetricCard";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,115 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { useBackupData, Reading, Machine } from "@/context/BackupDataContext";
+import { isToday, isYesterday, subDays, isWithinInterval } from "date-fns";
 
+// Helper function to calculate metrics from readings
+const calculateMetrics = (readings: Reading[], machines: Machine[]) => {
+  let entradaBruta = 0;
+  let saidaBruta = 0;
+  let lucroBruto = 0;
+  let comissaoCliente = 0;
+  let comissaoOperador = 0;
+  let lucroEmpresa = 0;
+
+  readings.forEach((reading) => {
+    entradaBruta += reading.entrada_atual || 0;
+    saidaBruta += reading.saida_atual || 0;
+    lucroBruto += reading.faturamento_bruto || 0;
+    comissaoCliente += reading.client_commission || 0;
+    comissaoOperador += reading.operator_commission || 0;
+    lucroEmpresa += reading.company_profit || 0;
+  });
+
+  // Calculate unique clients and machines from the filtered readings' machines
+  const uniqueMachineIds = new Set(readings.map(r => r.machine_id));
+  const uniqueClientIds = new Set(
+    machines
+      .filter(m => uniqueMachineIds.has(m.id))
+      .map(m => m.client_id)
+  );
+
+  return {
+    entradaBruta,
+    saidaBruta,
+    lucroBruto,
+    comissaoCliente,
+    comissaoOperador,
+    clientes: uniqueClientIds.size,
+    maquinas: uniqueMachineIds.size,
+    lucroEmpresa,
+  };
+};
 
 const Dashboard = () => {
+  const { backupData } = useBackupData();
+  const allReadings = backupData?.readings || [];
+  const allMachines = backupData?.machines || [];
+
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("today");
+  const [metrics, setMetrics] = useState({
+    entradaBruta: 0,
+    saidaBruta: 0,
+    lucroBruto: 0,
+    comissaoCliente: 0,
+    comissaoOperador: 0,
+    clientes: 0,
+    maquinas: 0,
+    lucroEmpresa: 0,
+  });
+
+  useEffect(() => {
+    const today = new Date();
+    let filteredReadings: Reading[] = [];
+
+    if (allReadings.length > 0) {
+      switch (selectedPeriod) {
+        case "today":
+          filteredReadings = allReadings.filter((r) =>
+            isToday(new Date(r.reading_date))
+          );
+          break;
+        case "yesterday":
+          filteredReadings = allReadings.filter((r) =>
+            isYesterday(new Date(r.reading_date))
+          );
+          break;
+        case "last7days":
+          const sevenDaysAgo = subDays(today, 7);
+          filteredReadings = allReadings.filter((r) =>
+            isWithinInterval(new Date(r.reading_date), {
+              start: sevenDaysAgo,
+              end: today,
+            })
+          );
+          break;
+        default:
+          filteredReadings = allReadings; // Fallback to all data if no period is selected
+          break;
+      }
+    }
+    setMetrics(calculateMetrics(filteredReadings, allMachines));
+  }, [selectedPeriod, allReadings, allMachines]);
+
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+  };
+
+  // Calculate percentage for Lucro Bruto and Lucro Empresa
+  const lucroBrutoPercentage = metrics.entradaBruta > 0
+    ? ((metrics.lucroBruto / metrics.entradaBruta) * 100).toFixed(1)
+    : "0.0";
+  const lucroEmpresaPercentage = metrics.entradaBruta > 0
+    ? ((metrics.lucroEmpresa / metrics.entradaBruta) * 100).toFixed(1)
+    : "0.0";
+
   return (
     <div className="flex-1 flex flex-col bg-dashboard-primary-blue text-white min-h-screen">
-      <DashboardHeader />
+      <DashboardHeader
+        currentPeriod={selectedPeriod}
+        onPeriodChange={handlePeriodChange}
+      />
 
       <main className="flex-1 p-6">
         {/* Iniciar Leituras Section */}
@@ -37,49 +140,49 @@ const Dashboard = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
           <MetricCard
             title="Entrada Bruta"
-            value="R$ 1.392,00"
+            value={`R$ ${metrics.entradaBruta.toFixed(2)}`}
             icon={ArrowDown}
             variant="default"
           />
           <MetricCard
             title="Saída Bruta"
-            value="R$ 839,70"
+            value={`R$ ${metrics.saidaBruta.toFixed(2)}`}
             icon={ArrowUp}
             variant="default"
           />
           <MetricCard
-            title="Lucro Bruto (39.7%)"
-            value="R$ 552,30"
+            title={`Lucro Bruto (${lucroBrutoPercentage}%)`}
+            value={`R$ ${metrics.lucroBruto.toFixed(2)}`}
             icon={BarChart}
             variant="default"
           />
           <MetricCard
             title="Com. Cliente"
-            value="R$ 276,15"
+            value={`R$ ${metrics.comissaoCliente.toFixed(2)}`}
             icon={Percent}
             variant="orange"
           />
           <MetricCard
             title="Com. Operador"
-            value="R$ 0,00"
+            value={`R$ ${metrics.comissaoOperador.toFixed(2)}`}
             icon={Percent}
             variant="default"
           />
           <MetricCard
             title="Clientes"
-            value="21"
+            value={metrics.clientes.toString()}
             icon={Users}
             variant="default"
           />
           <MetricCard
             title="Máquinas"
-            value="68"
+            value={metrics.maquinas.toString()}
             icon={Gamepad2}
             variant="default"
           />
           <MetricCard
-            title="Lucro Empresa (39.7%)"
-            value="R$ 276,15"
+            title={`Lucro Empresa (${lucroEmpresaPercentage}%)`}
+            value={`R$ ${metrics.lucroEmpresa.toFixed(2)}`}
             icon={BarChart}
             variant="green"
           />

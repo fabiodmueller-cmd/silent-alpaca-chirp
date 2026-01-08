@@ -11,7 +11,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const DashboardHeader = () => {
+interface DashboardHeaderProps {
+  currentPeriod: string;
+  onPeriodChange: (period: string) => void;
+}
+
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({
+  currentPeriod,
+  onPeriodChange,
+}) => {
   return (
     <div className="flex items-center justify-between p-6 bg-dashboard-primary-blue text-white border-b border-dashboard-secondary-blue">
       <div>
@@ -21,7 +29,7 @@ const DashboardHeader = () => {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <span className="text-gray-300">Período dos Cards:</span>
-          <Select defaultValue="today">
+          <Select value={currentPeriod} onValueChange={onPeriodChange}>
             <SelectTrigger className="w-[120px] bg-dashboard-secondary-blue text-white border-dashboard-secondary-blue">
               <SelectValue placeholder="Hoje" />
             </SelectTrigger>
