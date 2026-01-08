@@ -22,17 +22,31 @@ const ImportBackup = () => {
           const content = e.target?.result as string;
           const parsedData = JSON.parse(content);
 
+          // --- Adicionando log detalhado para depuração ---
+          console.log("Conteúdo JSON analisado (parsedData):", parsedData);
+          console.log("Tipo de parsedData:", typeof parsedData);
+          console.log("É um array?", Array.isArray(parsedData));
+          if (typeof parsedData === 'object' && parsedData !== null) {
+            console.log("parsedData.slotMachines:", parsedData.slotMachines);
+            console.log("É parsedData.slotMachines um array?", Array.isArray(parsedData.slotMachines));
+          }
+          // -------------------------------------------------
+
           let machinesToImport: any[] | null = null;
           let errorMessage = "";
 
           if (Array.isArray(parsedData)) {
             // Case 1: The JSON is directly an array of slot machines
             machinesToImport = parsedData;
-          } else if (typeof parsedData === 'object' && parsedData !== null && Array.isArray(parsedData.slotMachines)) {
-            // Case 2: The JSON is an object with a 'slotMachines' property that is an array
-            machinesToImport = parsedData.slotMachines;
+          } else if (typeof parsedData === 'object' && parsedData !== null) {
+            if (Array.isArray(parsedData.slotMachines)) {
+              // Case 2: The JSON is an object with a 'slotMachines' property that is an array
+              machinesToImport = parsedData.slotMachines;
+            } else {
+              errorMessage = "O objeto JSON é válido, mas não contém uma propriedade 'slotMachines' que seja um array.";
+            }
           } else {
-            errorMessage = "Formato de arquivo JSON inválido. O arquivo deve ser um array de máquinas ou um objeto com uma propriedade 'slotMachines' que seja um array.";
+            errorMessage = "O arquivo JSON não é um array direto nem um objeto válido.";
           }
 
           if (machinesToImport) {
