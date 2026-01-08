@@ -34,7 +34,8 @@ const ImportBackup = () => {
             setSlotMachines(parsedData);
             showSuccess("Backup importado com sucesso!");
           } else {
-            showError("Formato de arquivo JSON inválido para máquinas caça-níqueis.");
+            console.error("Dados importados não correspondem ao formato esperado:", parsedData);
+            showError("Formato de arquivo JSON inválido. Verifique se é um array de objetos com 'id', 'model', 'location', 'status' (operational, maintenance, offline), 'lastMaintenance' e 'dailyRevenue' com os tipos corretos.");
           }
         } catch (error) {
           console.error("Erro ao analisar JSON:", error);
