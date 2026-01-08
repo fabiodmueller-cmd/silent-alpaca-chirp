@@ -43,7 +43,7 @@ const ImportBackup = () => {
             rawMachinesToImport = parsedData;
             // If it's just an array of machines, create a minimal backupData structure
             fullBackupData = {
-              clients: [], operators: [], machines: parsedData, readings: [], regions: [], payments: []
+                clients: [], operators: [], machines: parsedData, readings: [], regions: [], payments: []
             };
           } else if (typeof parsedData === 'object' && parsedData !== null) {
             if (Array.isArray(parsedData.slotMachines)) {
