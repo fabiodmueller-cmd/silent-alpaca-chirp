@@ -7,8 +7,18 @@ import NotFound from "./pages/NotFound";
 import SlotMachineManager from "./pages/SlotMachineManager";
 import Dashboard from "./pages/Dashboard";
 import Layout from "./components/Layout";
-import ImportBackup from "./pages/ImportBackup"; // Import the new ImportBackup page
-import { SlotMachineProvider } from "./context/SlotMachineContext"; // Import the SlotMachineProvider
+import ImportBackup from "./pages/ImportBackup";
+import { SlotMachineProvider } from "./context/SlotMachineContext";
+import { BackupDataProvider } from "./context/BackupDataContext"; // Import the new BackupDataProvider
+
+// Import new pages
+import ClientsReadings from "./pages/ClientsReadings";
+import MachinesPerClient from "./pages/MachinesPerClient";
+import Readings from "./pages/Readings";
+import ReadingsSummary from "./pages/ReadingsSummary";
+import MachineBalance from "./pages/MachineBalance";
+import AdvancedReports from "./pages/AdvancedReports";
+import GeneralReport from "./pages/GeneralReport";
 
 const queryClient = new QueryClient();
 
@@ -18,23 +28,25 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <SlotMachineProvider> {/* Wrap the entire app with the provider */}
-          <Routes>
-            <Route path="/" element={<Layout><Dashboard /></Layout>} />
-            <Route path="/slot-machine-manager" element={<Layout><SlotMachineManager /></Layout>} />
-            <Route path="/import-backup" element={<Layout><ImportBackup /></Layout>} /> {/* New route for Import Backup */}
-            {/* Add other routes here, wrapped in Layout if they need the sidebar */}
-            <Route path="/clients-readings" element={<Layout><div>CLIENTES E LEITURAS Page</div></Layout>} />
-            <Route path="/machines-per-client" element={<Layout><div>MÁQUINAS P/ CLIENT... Page</div></Layout>} />
-            <Route path="/readings" element={<Layout><div>LEITURAS Page</div></Layout>} />
-            <Route path="/readings-summary" element={<Layout><div>RESUMO LEITURAS Page</div></Layout>} />
-            <Route path="/machine-balance" element={<Layout><div>SOBRA MÁQUINAS Page</div></Layout>} />
-            <Route path="/advanced-reports" element={<Layout><div>REL. AVANÇADOS Page</div></Layout>} />
-            <Route path="/general-report" element={<Layout><div>REL. GERAL Page</div></Layout>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </SlotMachineProvider>
+        <BackupDataProvider> {/* Wrap with BackupDataProvider */}
+          <SlotMachineProvider>
+            <Routes>
+              <Route path="/" element={<Layout><Dashboard /></Layout>} />
+              <Route path="/slot-machine-manager" element={<Layout><SlotMachineManager /></Layout>} />
+              <Route path="/import-backup" element={<Layout><ImportBackup /></Layout>} />
+              {/* New routes for displaying backup data */}
+              <Route path="/clients-readings" element={<Layout><ClientsReadings /></Layout>} />
+              <Route path="/machines-per-client" element={<Layout><MachinesPerClient /></Layout>} />
+              <Route path="/readings" element={<Layout><Readings /></Layout>} />
+              <Route path="/readings-summary" element={<Layout><ReadingsSummary /></Layout>} />
+              <Route path="/machine-balance" element={<Layout><MachineBalance /></Layout>} />
+              <Route path="/advanced-reports" element={<Layout><AdvancedReports /></Layout>} />
+              <Route path="/general-report" element={<Layout><GeneralReport /></Layout>} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </SlotMachineProvider>
+        </BackupDataProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

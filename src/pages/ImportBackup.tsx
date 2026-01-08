@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSlotMachines } from "@/context/SlotMachineContext";
+import { useBackupData, BackupData, Machine as BackupMachine } from "@/context/BackupDataContext"; // Import BackupDataContext and its Machine interface
 import { showSuccess, showError } from "@/utils/toast";
 
 const ImportBackup = () => {
-  const { slotMachines, setSlotMachines } = useSlotMachines(); // Get current slotMachines
+  const { slotMachines, setSlotMachines } = useSlotMachines();
+  const { setBackupData } = useBackupData(); // Use the new backup data context
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,18 +24,38 @@ const ImportBackup = () => {
           const content = e.target?.result as string;
           const parsedData = JSON.parse(content);
 
+          let fullBackupData: BackupData | null = null;
           let rawMachinesToImport: any[] | null = null;
           let errorMessage = "";
 
-          if (Array.isArray(parsedData)) {
+          // Attempt to parse the full backup structure
+          if (parsedData.data && typeof parsedData.data === 'object') {
+            fullBackupData = {
+              clients: parsedData.data.clients || [],
+              operators: parsedData.data.operators || [],
+              machines: parsedData.data.machines || [],
+              readings: parsedData.data.readings || [],
+              regions: parsedData.data.regions || [],
+              payments: parsedData.data.payments || [],
+            };
+            rawMachinesToImport = parsedData.data.machines || [];
+          } else if (Array.isArray(parsedData)) { // Handle direct array of machines
             rawMachinesToImport = parsedData;
+            // If it's just an array of machines, create a minimal backupData structure
+            fullBackupData = {
+              clients: [], operators: [], machines: parsedData, readings: [], regions: [], payments: []
+            };
           } else if (typeof parsedData === 'object' && parsedData !== null) {
             if (Array.isArray(parsedData.slotMachines)) {
               rawMachinesToImport = parsedData.slotMachines;
-            } else if (parsedData.data && Array.isArray(parsedData.data.machines)) {
-              rawMachinesToImport = parsedData.data.machines;
+              fullBackupData = {
+                clients: [], operators: [], machines: parsedData.slotMachines, readings: [], regions: [], payments: []
+              };
             } else if (Array.isArray(parsedData.machines)) {
               rawMachinesToImport = parsedData.machines;
+              fullBackupData = {
+                clients: [], operators: [], machines: parsedData.machines, readings: [], regions: [], payments: []
+              };
             } else {
               errorMessage = "O objeto JSON é válido, mas não contém uma propriedade 'slotMachines', 'machines' ou 'data.machines' que seja um array.";
             }
@@ -41,10 +63,14 @@ const ImportBackup = () => {
             errorMessage = "O arquivo JSON não é um array direto nem um objeto válido.";
           }
 
-          if (rawMachinesToImport) {
+          if (rawMachinesToImport && fullBackupData) {
+            // Update the full backup data context
+            setBackupData(fullBackupData);
+
+            // Format machines for SlotMachineContext (used by SlotMachineManager page)
             const formattedMachines = rawMachinesToImport.map((machine: any) => ({
-              id: (machine.id || machine.serial_number || `temp-${Math.random().toString(36).substring(7)}`).toString(), // Ensure unique ID, fallback if none
-              serialNumber: (machine.serial_number || "N/A").toString(), // Map serial_number
+              id: (machine.id || machine.serial_number || `temp-${Math.random().toString(36).substring(7)}`).toString(),
+              serialNumber: (machine.serial_number || "N/A").toString(),
               model: (machine.label || machine.model || "UNKNOWN_MODEL").toString(),
               location: (machine.location || "N/A").toString(),
               status: "operational", // Default status
@@ -52,7 +78,7 @@ const ImportBackup = () => {
               dailyRevenue: 0 // Default revenue
             }));
 
-            // Now, validate the formattedMachines against the expected interface
+            // Validate formatted machines
             const invalidItem = formattedMachines.find((item: any) => !(
               typeof item.id === 'string' &&
               typeof item.serialNumber === 'string' &&
@@ -65,6 +91,7 @@ const ImportBackup = () => {
 
             if (invalidItem) {
               errorMessage = `Um ou mais itens no array de máquinas formatadas não seguem o formato esperado. Item problemático: ${JSON.stringify(invalidItem)}.`;
+              // Detailed error messages for each field
               if (typeof invalidItem.id !== 'string') errorMessage += " 'id' não é string.";
               if (typeof invalidItem.serialNumber !== 'string') errorMessage += " 'serialNumber' não é string.";
               if (typeof invalidItem.model !== 'string') errorMessage += " 'model' não é string.";
@@ -78,7 +105,7 @@ const ImportBackup = () => {
               console.error("Dados importados não correspondem ao formato esperado:", parsedData);
               showError(`Formato de arquivo JSON inválido: ${errorMessage}`);
             } else {
-              // Prevent duplicates: Filter out machines that already exist by ID
+              // Prevent duplicates for SlotMachineContext: Filter out machines that already exist by ID
               const existingMachineIds = new Set(slotMachines.map(m => m.id));
               const newUniqueMachines = formattedMachines.filter(
                 (machine) => !existingMachineIds.has(machine.id)
